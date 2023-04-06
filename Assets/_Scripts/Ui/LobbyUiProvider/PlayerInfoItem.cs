@@ -2,6 +2,7 @@
 using _Scripts.Db;
 using _Scripts.Utils;
 using TMPro;
+using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
@@ -49,6 +50,8 @@ namespace _Scripts.Ui.LobbyUiProvider
 			_playerName.text = player.Id;
 			_lobbyId = lobbyId;
 			_player = player;
+			if (AuthenticationService.Instance.PlayerId != player.Id)
+				_button.enabled = false;
 			if (player.Data.TryGetValue(Const.PLAYER_SKIN, out var key))
 			{
 				var sprite = _playerSkinData.GetSkin(key.Value);

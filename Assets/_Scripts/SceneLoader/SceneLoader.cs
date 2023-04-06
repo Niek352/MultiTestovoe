@@ -13,6 +13,7 @@ namespace _Scripts.SceneLoader
 			if (Instance)
 				Destroy(Instance);
 			Instance = this;
+			DontDestroyOnLoad(gameObject);
 		}
 
 		public async UniTaskVoid LoadLobby()

@@ -5,10 +5,14 @@ using System.Linq;
 using System.Threading;
 using _Scripts.Utils;
 using Cysharp.Threading.Tasks;
+using Mirror;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
+using Unity.Services.Relay;
+using Unity.Services.Relay.Models;
 using UnityEngine;
+using Utp;
 
 namespace _Scripts._Lobby
 {
@@ -17,10 +21,59 @@ namespace _Scripts._Lobby
 		public Lobby ActiveLobby { get; private set; }
 		public event Action<bool> LobbyStatusChanged;
 		public event Action<Lobby> LobbyUpdated;
-
+		public static LobbyManager Instance;
 		private readonly ConcurrentQueue<string> _createdLobbyIds = new ConcurrentQueue<string>();
 		private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+		private RelayNetworkManager _relayNetworkManager;
+		
+		private void Awake()
+		{
+			if (Instance)
+			{
+				Destroy(gameObject);
+				return;
+			}
 
+			Instance = this;
+			DontDestroyOnLoad(gameObject);
+			_relayNetworkManager = (RelayNetworkManager)NetworkManager.singleton;
+		}
+
+		public async UniTask<string> CreateRelay()
+		{
+			Allocation allocation;
+			try
+			{
+				allocation = await RelayService.Instance.CreateAllocationAsync(4);
+			}
+			catch (Exception e)
+			{
+				Debug.LogError($"Relay create allocation request failed {e.Message}");
+				throw;
+			}
+			
+			Debug.Log($"server: {allocation.ConnectionData[0]} {allocation.ConnectionData[1]}");
+			Debug.Log($"server: {allocation.AllocationId}");
+			
+			_relayNetworkManager.StartRelayHost(allocation);
+			_cts.Cancel();
+			_cts.Dispose();
+			var joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+			return joinCode;
+		}
+		public void JoinRelay(string joinCode)
+		{
+			try
+			{
+				_relayNetworkManager.JoinRelayServer(joinCode);
+			}
+			catch
+			{
+				Debug.LogError("Relay create join code request failed");
+				throw;
+			}
+		}
+		
 		private async UniTaskVoid HeartbeatLobby(string lobbyId, float waitTimeSeconds, CancellationToken ct)
 		{
 			while (!ct.IsCancellationRequested)
@@ -59,7 +112,7 @@ namespace _Scripts._Lobby
 							}
 						})
 				};
-
+		
 				var lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, 4, options);
 				ActiveLobby = lobby;
 				_createdLobbyIds.Enqueue(lobby.Id);

@@ -1,6 +1,5 @@
 ﻿using System;
 using _Scripts._Lobby;
-using _Scripts.Db;
 using _Scripts.Utils;
 using TMPro;
 using UnityEngine;
@@ -14,18 +13,20 @@ namespace _Scripts.Ui.LobbyUiProvider
 		[SerializeField] private LobbyWidget _createLobby;
 		[Header("Join Lobby")]
 		[SerializeField] private LobbyWidget _joinLobby;
-		[Header("Lobby Manager")]
-		[SerializeField] private LobbyManager _lobbyManager;
 		private void Start()
 		{
-			_lobbyManager.LobbyStatusChanged += LobbyStatusChanged;
+			if (LobbyManager.Instance.ActiveLobby != null)
+			{
+				HideWidgets();
+			}
+			LobbyManager.Instance.LobbyStatusChanged += LobbyStatusChanged;
 			_createLobby.Button.onClick.AddListener(CreateLobby);
 			_joinLobby.Button.onClick.AddListener(JoinLobby);
 		}
 		
 		private void OnDisable()
 		{
-			_lobbyManager.LobbyStatusChanged -= LobbyStatusChanged;
+			LobbyManager.Instance.LobbyStatusChanged -= LobbyStatusChanged;
 		}
 
 		private void LobbyStatusChanged(bool connected)
@@ -62,7 +63,7 @@ namespace _Scripts.Ui.LobbyUiProvider
 				return;
 			}
 			
-			_lobbyManager.JoinToLobby(lobbyName, Const.DEFAULT_SKIN).Forget();
+			LobbyManager.Instance.JoinToLobby(lobbyName, Const.DEFAULT_SKIN).Forget();
 		}
 
 		private void CreateLobby()
@@ -75,7 +76,7 @@ namespace _Scripts.Ui.LobbyUiProvider
 				return;
 			}
 			
-			_lobbyManager.CreateLobby(lobbyName, Const.DEFAULT_SKIN).Forget();
+			LobbyManager.Instance.CreateLobby(lobbyName, Const.DEFAULT_SKIN).Forget();
 		}
 
 		[Serializable]
