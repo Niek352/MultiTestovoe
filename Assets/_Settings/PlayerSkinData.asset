@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64ef9d0c3bde4016a6ebb5c92d56975e, type: 3}
+  m_Name: PlayerSkinData
+  m_EditorClassIdentifier: 
+  _lobbyPlayerSkin:
+  - Key: DefaultKey
+    Sprite: {fileID: 7482667652216324306, guid: 619ff462c8688ed4baecf0662d2554be, type: 3}
+  - Key: Circle
+    Sprite: {fileID: -2413806693520163455, guid: 8502ceef2859e0640b220c79537a9759, type: 3}
+  - Key: Triangle
+    Sprite: {fileID: 7482667652216324306, guid: d3d6070b79c2d4b43bd4e01635cb4ec2, type: 3}
+  - Key: Hexagon
+    Sprite: {fileID: 2747690628134850419, guid: 9f496293d7427a140aee21009db21072, type: 3}

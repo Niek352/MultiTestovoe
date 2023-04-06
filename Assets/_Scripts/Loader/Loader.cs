@@ -7,8 +7,6 @@ namespace _Scripts.Loader
 {
 	public class Loader : MonoBehaviour
 	{
-		[SerializeField] private bool isLoggedIn;
-
 		private async UniTaskVoid Start()
 		{
 			try
@@ -16,14 +14,12 @@ namespace _Scripts.Loader
 				await UnityServices.InitializeAsync();
 				await AuthenticationService.Instance.SignInAnonymouslyAsync();
 				Debug.Log("Logged into Unity, player ID: " + AuthenticationService.Instance.PlayerId);
-				isLoggedIn = true;
 
 				SceneLoader.SceneLoader.Instance.LoadLobby().Forget();
 			}
 			catch (UnityException e)
 			{
-				isLoggedIn = false;
-				Debug.Log(e);
+				Debug.LogError(e);
 			}
 		}
 	}
