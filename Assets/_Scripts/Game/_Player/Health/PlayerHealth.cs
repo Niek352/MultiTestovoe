@@ -37,6 +37,7 @@ namespace _Scripts.Game._Player.Health
 			}
 		}
 		
+		[Server]
 		private void ServerDeath()
 		{
 			_isDead = true;

@@ -19,8 +19,11 @@ namespace _Scripts.Game._Player.Shooting
 				HandleInput();
 				if (_buttonPressed)
 				{
+					// 
 					_timer = _shootCd;
 					_buttonPressed = false;
+					//
+					
 					Shoot();					
 				}
 				

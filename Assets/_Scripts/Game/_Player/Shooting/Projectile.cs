@@ -23,8 +23,8 @@ namespace _Scripts.Game._Player.Shooting
 			Invoke(nameof(DestroySelf), _destroyAfter);
 			AddForce();
 		}
-
-		[ContextMenu("AddForce")]
+		
+		[Server]
 		private void AddForce()
 		{
 			_rigidBody.AddForce(transform.up * _force);

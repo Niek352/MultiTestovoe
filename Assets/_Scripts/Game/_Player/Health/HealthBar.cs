@@ -13,10 +13,16 @@ namespace _Scripts.Game._Player.Health
 		{
 			_playerHealth.OnHealthChanged += HealthChanged;
 			transform.SetParent(null);
+			transform.rotation = Quaternion.identity;
 		}
 
 		private void LateUpdate()
 		{
+			if (!transform || !_parent)
+			{
+				Destroy(gameObject);
+				return;
+			}
 			transform.position = _parent.position + new Vector3(0, _offset);
 		}
 		

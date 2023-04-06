@@ -20,7 +20,7 @@ namespace _Scripts.Game._Player
 				HandleMovement();
 			}
 		}
-
+		
 		private void HandleMovement()
 		{
 			_input = new Vector3(SimpleInput.GetAxisRaw(HORIZONTAL), SimpleInput.GetAxisRaw(VERTICAL), 0);

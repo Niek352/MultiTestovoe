@@ -41,6 +41,12 @@ namespace _Scripts._Lobby
 
 		public async UniTask<string> CreateRelay()
 		{
+			if (!_relayNetworkManager)
+			{
+				//TODO: Что-то убивает NetworkManager
+				Debug.LogError("Что-то убивает NetworkManager");
+				return "";
+			}
 			Allocation allocation;
 			try
 			{
@@ -54,17 +60,20 @@ namespace _Scripts._Lobby
 			
 			Debug.Log($"server: {allocation.ConnectionData[0]} {allocation.ConnectionData[1]}");
 			Debug.Log($"server: {allocation.AllocationId}");
-			
+
 			_relayNetworkManager.StartRelayHost(allocation);
 			_cts.Cancel();
 			_cts.Dispose();
 			var joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 			return joinCode;
 		}
+		
 		public void JoinRelay(string joinCode)
 		{
 			try
 			{
+				_cts.Cancel();
+				_cts.Dispose();
 				_relayNetworkManager.JoinRelayServer(joinCode);
 			}
 			catch
@@ -119,7 +128,7 @@ namespace _Scripts._Lobby
 				print($"Lobby {lobby.Id} created!");
 				
 				HeartbeatLobby(lobby.Id, 15, _cts.Token).Forget();
-				UpdateLobby(lobby.Id, 2.5f, _cts.Token).Forget();
+				UpdateLobby(lobby.Id, 1f, _cts.Token).Forget();
 				LobbyStatusChanged?.Invoke(true);
 			}
 			catch (Exception e)
@@ -157,7 +166,7 @@ namespace _Scripts._Lobby
 				
 				ActiveLobby = lobby;
 				print($"Connected to {lobby.Name}");
-				UpdateLobby(lobby.Id, 5, _cts.Token).Forget();
+				UpdateLobby(lobby.Id, 1, _cts.Token).Forget();
 				LobbyStatusChanged?.Invoke(true);
 			}
 			catch (Exception e)
@@ -167,14 +176,17 @@ namespace _Scripts._Lobby
 				throw;
 			}
 		}
-		
-		private void OnApplicationQuit()
+		private void OnDisable()
 		{
 			if (!_cts.IsCancellationRequested)
 			{
 				_cts?.Cancel();
 				_cts?.Dispose();
 			}
+		}
+		
+		private void OnApplicationQuit()
+		{
 			if (ActiveLobby != null)
 			{
 				LobbyService.Instance.RemovePlayerAsync(ActiveLobby.Id, AuthenticationService.Instance.PlayerId);

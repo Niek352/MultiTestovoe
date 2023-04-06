@@ -37,6 +37,10 @@ namespace _Scripts.Ui.LobbyUiProvider
 			if (_isHost)
 			{
 				var joinCode = await LobbyManager.Instance.CreateRelay();
+				if (string.IsNullOrEmpty(joinCode))
+				{
+					throw new NullReferenceException("Join code is empty, restart game");
+				}
 				await LobbyService.Instance.UpdateLobbyAsync(LobbyManager.Instance.ActiveLobby.Id, new UpdateLobbyOptions()
 				{
 					Data = new Dictionary<string, DataObject>

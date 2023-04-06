@@ -24,7 +24,8 @@ namespace _Scripts.Game.Match
 				ObservePlayer(conn);
 			}
 		}
-
+		
+		[Server]
 		private void ObservePlayer(NetworkConnectionToClient connection)
 		{
 			if (connection.identity.TryGetComponent<PlayerContext>(out var context))
