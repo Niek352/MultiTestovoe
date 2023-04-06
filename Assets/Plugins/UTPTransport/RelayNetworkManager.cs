@@ -10,6 +10,9 @@ namespace Utp
 		private UtpTransport utpTransport;
 		private IRelayManager _relayManager;
 
+		public event Action<NetworkConnectionToClient> OnServAddPlayer;
+		public event Action<NetworkConnectionToClient> OnServerDisconnectPlayer;
+
 		public override void Awake()
 		{
 			base.Awake();
@@ -118,6 +121,18 @@ namespace Utp
 			{
 				UtpLog.Error($"Failed to join Relay server.");
 			});
+		}
+
+		public override void OnServerAddPlayer(NetworkConnectionToClient conn)
+		{
+			base.OnServerAddPlayer(conn);
+			OnServAddPlayer?.Invoke(conn);
+		}
+
+		public override void OnServerDisconnect(NetworkConnectionToClient conn)
+		{
+			OnServerDisconnectPlayer?.Invoke(conn);
+			base.OnServerDisconnect(conn);
 		}
 	}
 }
