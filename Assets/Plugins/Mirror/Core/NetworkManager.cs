@@ -738,7 +738,7 @@ namespace Mirror
         // virtual so that inheriting classes' OnDestroy() can call base.OnDestroy() too
         public virtual void OnDestroy()
         {
-            Debug.LogError("NetworkManager destroyed");
+            //Debug.LogError("NetworkManager destroyed");
         }
 
         /// <summary>The name of the current network scene.</summary>

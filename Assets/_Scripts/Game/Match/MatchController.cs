@@ -2,9 +2,9 @@
 using System.Linq;
 using _Scripts.Game._Player;
 using _Scripts.Game._Player.Health;
+using _Scripts.Network;
 using Mirror;
 using UnityEngine;
-using Utp;
 
 namespace _Scripts.Game.Match
 {
@@ -12,11 +12,11 @@ namespace _Scripts.Game.Match
 	{
 		[SerializeField] private List<PlayerContext> _clients = new List<PlayerContext>();
 		[SerializeField] private MatchResult _matchResult;
-		private RelayNetworkManager _relayNetworkManager;
+		private CustomNetworkManager _relayNetworkManager;
 		
 		public override void OnStartServer()
 		{
-			_relayNetworkManager = (RelayNetworkManager)NetworkManager.singleton;
+			_relayNetworkManager = (CustomNetworkManager)NetworkManager.singleton;
 			_relayNetworkManager.OnServAddPlayer += OnServerConnected;
 			_relayNetworkManager.OnServerDisconnectPlayer += OnServerDisconnected;
 			foreach (var conn in NetworkServer.connections.Values)

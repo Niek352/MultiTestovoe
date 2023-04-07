@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using _Scripts.Network;
 using _Scripts.Utils;
 using Cysharp.Threading.Tasks;
 using Mirror;
@@ -12,7 +13,6 @@ using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
-using Utp;
 
 namespace _Scripts._Lobby
 {
@@ -23,8 +23,9 @@ namespace _Scripts._Lobby
 		public event Action<Lobby> LobbyUpdated;
 		public static LobbyManager Instance;
 		private readonly ConcurrentQueue<string> _createdLobbyIds = new ConcurrentQueue<string>();
-		private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-		private RelayNetworkManager _relayNetworkManager;
+		private CancellationTokenSource _cts = new CancellationTokenSource();
+		public bool IsHost => ActiveLobby.HostId == AuthenticationService.Instance.PlayerId;
+		private CustomNetworkManager CustomNetworkManager => (CustomNetworkManager)NetworkManager.singleton;
 		
 		private void Awake()
 		{
@@ -36,49 +37,89 @@ namespace _Scripts._Lobby
 
 			Instance = this;
 			DontDestroyOnLoad(gameObject);
-			_relayNetworkManager = (RelayNetworkManager)NetworkManager.singleton;
+		}
+		
+		public void PingLobby()
+		{
+			if (ActiveLobby != null)
+			{
+				if (!_cts.IsCancellationRequested)
+				{
+					_cts?.Cancel();
+					_cts?.Dispose();
+				}
+				_cts = new CancellationTokenSource();
+				if (IsHost)
+				{
+					HeartbeatLobby(ActiveLobby.Id, 15, _cts.Token).Forget();
+				}
+				UpdateLobby(ActiveLobby.Id, 1f, _cts.Token).Forget();
+			}
 		}
 
-		public async UniTask<string> CreateRelay()
+		public async UniTaskVoid CreateRelayServer()
 		{
-			if (!_relayNetworkManager)
-			{
-				//TODO: Что-то убивает NetworkManager
-				Debug.LogError("Что-то убивает NetworkManager");
-				return "";
-			}
 			Allocation allocation;
 			try
 			{
 				allocation = await RelayService.Instance.CreateAllocationAsync(4);
 			}
-			catch (Exception e)
+			catch (RelayServiceException e)
 			{
 				Debug.LogError($"Relay create allocation request failed {e.Message}");
 				throw;
 			}
-			
 			Debug.Log($"server: {allocation.ConnectionData[0]} {allocation.ConnectionData[1]}");
 			Debug.Log($"server: {allocation.AllocationId}");
-
-			_relayNetworkManager.StartRelayHost(allocation);
-			_cts.Cancel();
-			_cts.Dispose();
+			
+			CustomNetworkManager.StartRelayHost(allocation, ActiveLobby.Players.Count);
+			if(!_cts.IsCancellationRequested) 
+			{
+				_cts?.Cancel();
+				_cts?.Dispose();
+			}
 			var joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
-			return joinCode;
+			ActiveLobby = await LobbyService.Instance.UpdateLobbyAsync(ActiveLobby.Id, new UpdateLobbyOptions
+			{
+				Data = new Dictionary<string, DataObject>
+				{
+					{
+						Const.JOIN_CODE, new DataObject(DataObject.VisibilityOptions.Member, joinCode)
+					}
+				}
+			});
+			ActiveLobby.Data[Const.JOIN_CODE] = new DataObject(DataObject.VisibilityOptions.Member, "");
+			LobbyUpdated?.Invoke(ActiveLobby);
 		}
 		
+		public async void ClearJoinCode()
+		{
+			ActiveLobby = await LobbyService.Instance.UpdateLobbyAsync(ActiveLobby.Id, new UpdateLobbyOptions
+			{
+				Data = new Dictionary<string, DataObject>
+				{
+					{
+						Const.JOIN_CODE, new DataObject(DataObject.VisibilityOptions.Member, "")
+					}
+				}
+			});
+		}
+
 		public void JoinRelay(string joinCode)
 		{
 			try
 			{
-				_cts.Cancel();
-				_cts.Dispose();
-				_relayNetworkManager.JoinRelayServer(joinCode);
+				if(!_cts.IsCancellationRequested) 
+				{
+					_cts?.Cancel();
+					_cts?.Dispose();
+				}
+				CustomNetworkManager.JoinRelayServer(joinCode);
+				ActiveLobby.Data[Const.JOIN_CODE] = new DataObject(DataObject.VisibilityOptions.Member, "");
 			}
-			catch
+			catch (RelayServiceException e)
 			{
-				Debug.LogError("Relay create join code request failed");
+				Debug.LogError(e);
 				throw;
 			}
 		}
@@ -107,7 +148,6 @@ namespace _Scripts._Lobby
 			try
 			{
 				print($"Creating lobby {lobbyName}");
-				
 				var options = new CreateLobbyOptions
 				{
 					Player = new Player(
@@ -143,7 +183,6 @@ namespace _Scripts._Lobby
 		{
 			try
 			{
-				print($"Connecting to {lobbyName}");
 				var options = new JoinLobbyByIdOptions
 				{
 					Player = new Player(
@@ -158,14 +197,11 @@ namespace _Scripts._Lobby
 						})
 				};
 				
-				//Мини хардкод
 				var query = await LobbyService.Instance.QueryLobbiesAsync();
-				print($"lobby count {query.Results.Count}");
 				var lobbyId = query.Results.First(l => l.Name == lobbyName).Id;
 				var lobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobbyId, options);
 				
 				ActiveLobby = lobby;
-				print($"Connected to {lobby.Name}");
 				UpdateLobby(lobby.Id, 1, _cts.Token).Forget();
 				LobbyStatusChanged?.Invoke(true);
 			}

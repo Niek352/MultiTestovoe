@@ -1,4 +1,5 @@
-﻿using _Scripts.Game._Player;
+﻿using _Scripts._Lobby;
+using _Scripts.Game._Player;
 using Mirror;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,20 +20,20 @@ namespace _Scripts.Game.Match
 			item.Init(playerContext.PlayerSkin.Skin, playerContext.CoinCollector.CollectedCoins);
 		}
 
-		private void Awake()
+		private void Start()
 		{
 			_leaveToLobby.onClick.AddListener(LeaveToLobby);
 		}
 
 		private void LeaveToLobby()
 		{
-			if (NetworkClient.activeHost)
+			if (LobbyManager.Instance.IsHost)
 			{
 				NetworkManager.singleton.StopHost();
 			}
 			else
 			{
-				NetworkManager.singleton.StopClient();
+				NetworkManager.singleton.StartClient();
 			}
 		}
 	}

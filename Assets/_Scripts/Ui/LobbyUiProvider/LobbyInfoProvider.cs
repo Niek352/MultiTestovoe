@@ -19,7 +19,6 @@ namespace _Scripts.Ui.LobbyUiProvider
 		[SerializeField] private PlayerInfoItem _prefabItem;
 		[SerializeField] private Button _startGame;
 		private readonly List<PlayerInfoItem> _items = new List<PlayerInfoItem>();
-		private bool _isHost;
 		
 		private void Start()
 		{
@@ -29,28 +28,16 @@ namespace _Scripts.Ui.LobbyUiProvider
 			if (LobbyManager.Instance.ActiveLobby != null)
 			{
 				UpdateLobby(LobbyManager.Instance.ActiveLobby);
+				LobbyManager.Instance.PingLobby();
 			}
 		}
-
-		private async void StartGame()
+		
+		private void StartGame()
 		{
-			if (_isHost)
-			{
-				var joinCode = await LobbyManager.Instance.CreateRelay();
-				if (string.IsNullOrEmpty(joinCode))
-				{
-					throw new NullReferenceException("Join code is empty, restart game");
-				}
-				await LobbyService.Instance.UpdateLobbyAsync(LobbyManager.Instance.ActiveLobby.Id, new UpdateLobbyOptions()
-				{
-					Data = new Dictionary<string, DataObject>
-					{
-						{
-							Const.JOIN_CODE, new DataObject(DataObject.VisibilityOptions.Member, joinCode)
-						}
-					}
-				});
-			}
+			if (!LobbyManager.Instance.IsHost)
+				return;
+			_startGame.interactable = false;
+			LobbyManager.Instance.CreateRelayServer().Forget();
 		}
 
 		private void OnDisable()
@@ -73,20 +60,10 @@ namespace _Scripts.Ui.LobbyUiProvider
 
 		private void UpdateLobby(Lobby lobby)
 		{
+			Debug.Log("lobby Updated");
 			_lobbyName.text = lobby.Name;
-
-			if (lobby.HostId == AuthenticationService.Instance.PlayerId)
-			{
-				_isHost = true;
-				_startGame.gameObject.SetActive(true);
-			}
-			else
-				_isHost = false;
-
-			foreach (var item in _items)
-				Destroy(item.gameObject);
-
-			_items.Clear();
+			_startGame.gameObject.SetActive(LobbyManager.Instance.IsHost);
+			ClearPlayers();
 
 			foreach (var lobbyPlayer in lobby.Players)
 			{
@@ -96,15 +73,21 @@ namespace _Scripts.Ui.LobbyUiProvider
 			
 			CheckStartGame(lobby);
 		}
+		
+		private void ClearPlayers()
+		{
+			foreach (var item in _items)
+				Destroy(item.gameObject);
+
+			_items.Clear();
+		}
 
 		private void CheckStartGame(Lobby lobby)
 		{
 			if (lobby.Data == null)
 				return;
-			if (lobby.Data.TryGetValue(Const.JOIN_CODE, out var value))
-			{
+			if (lobby.Data.TryGetValue(Const.JOIN_CODE, out var value) && !string.IsNullOrEmpty(value.Value))
 				LobbyManager.Instance.JoinRelay(value.Value);
-			}
 		}
 
 		private void AddPlayerInfo(Player player, string lobbyId)
