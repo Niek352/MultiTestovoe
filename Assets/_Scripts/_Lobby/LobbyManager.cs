@@ -13,6 +13,7 @@ using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace _Scripts._Lobby
 {
@@ -145,6 +146,7 @@ namespace _Scripts._Lobby
 
 		public async UniTaskVoid CreateLobby(string lobbyName, string skinKey)
 		{
+			var nickName = await NickNameGen.GetNickName();
 			try
 			{
 				print($"Creating lobby {lobbyName}");
@@ -158,17 +160,19 @@ namespace _Scripts._Lobby
 								Const.PLAYER_SKIN, new PlayerDataObject(
 									visibility: PlayerDataObject.VisibilityOptions.Member,
 									value: skinKey)
+							},
+							{
+								Const.PLAYER_NAME, new PlayerDataObject(
+									visibility: PlayerDataObject.VisibilityOptions.Member,
+									value: nickName)
 							}
 						})
 				};
 		
-				var lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, 4, options);
-				ActiveLobby = lobby;
-				_createdLobbyIds.Enqueue(lobby.Id);
-				print($"Lobby {lobby.Id} created!");
-				
-				HeartbeatLobby(lobby.Id, 15, _cts.Token).Forget();
-				UpdateLobby(lobby.Id, 1f, _cts.Token).Forget();
+				ActiveLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, 4, options);
+				_createdLobbyIds.Enqueue(ActiveLobby.Id);
+				HeartbeatLobby(ActiveLobby.Id, 15, _cts.Token).Forget();
+				UpdateLobby(ActiveLobby.Id, 1f, _cts.Token).Forget();
 				LobbyStatusChanged?.Invoke(true);
 			}
 			catch (Exception e)
@@ -181,6 +185,7 @@ namespace _Scripts._Lobby
 
 		public async UniTaskVoid JoinToLobby(string lobbyName, string skinKey)
 		{
+			var nickName = await NickNameGen.GetNickName();
 			try
 			{
 				var options = new JoinLobbyByIdOptions
@@ -193,6 +198,11 @@ namespace _Scripts._Lobby
 								Const.PLAYER_SKIN, new PlayerDataObject(
 									visibility: PlayerDataObject.VisibilityOptions.Member,
 									value: skinKey)
+							},
+							{
+								Const.PLAYER_NAME, new PlayerDataObject(
+									visibility: PlayerDataObject.VisibilityOptions.Member,
+									value: nickName)
 							}
 						})
 				};

@@ -139,9 +139,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75bff856ecc4404caac3fd4cbf0c3218, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncDirection: 0
+  syncDirection: 1
   syncMode: 0
   syncInterval: 0
+  _nickName: 
   _health: {fileID: 3159211832694302972}
   _movement: {fileID: 466832339798931334}
   _playerSkin: {fileID: 8876780317280855640}

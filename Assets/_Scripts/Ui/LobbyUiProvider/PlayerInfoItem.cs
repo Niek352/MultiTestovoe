@@ -47,7 +47,7 @@ namespace _Scripts.Ui.LobbyUiProvider
 
 		public void Refresh(Player player, string lobbyId)
 		{
-			_playerName.text = player.Id;
+			_playerName.text = GetNickName(player);
 			_lobbyId = lobbyId;
 			_player = player;
 			if (AuthenticationService.Instance.PlayerId != player.Id)
@@ -61,6 +61,13 @@ namespace _Scripts.Ui.LobbyUiProvider
 			{
 				Debug.LogError("player Skin is out");
 			}
+		}
+		
+		private string GetNickName(Player player)
+		{
+			if (player.Data == null)
+				return "";
+			return player.Data.TryGetValue(Const.PLAYER_NAME, out var value) ? value.Value : "";
 		}
 	}
 }

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using _Scripts._Lobby;
 using _Scripts.Utils;
 using TMPro;
-using Unity.Services.Authentication;
-using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
@@ -60,7 +57,6 @@ namespace _Scripts.Ui.LobbyUiProvider
 
 		private void UpdateLobby(Lobby lobby)
 		{
-			Debug.Log("lobby Updated");
 			_lobbyName.text = lobby.Name;
 			_startGame.gameObject.SetActive(LobbyManager.Instance.IsHost);
 			ClearPlayers();
@@ -89,6 +85,8 @@ namespace _Scripts.Ui.LobbyUiProvider
 			if (lobby.Data.TryGetValue(Const.JOIN_CODE, out var value) && !string.IsNullOrEmpty(value.Value))
 				LobbyManager.Instance.JoinRelay(value.Value);
 		}
+
+		
 
 		private void AddPlayerInfo(Player player, string lobbyId)
 		{

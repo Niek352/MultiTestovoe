@@ -17,7 +17,7 @@ namespace _Scripts.Game.Match
 		{
 			_container.SetActive(true);
 			var item = Instantiate(_resultItem, _holder);
-			item.Init(playerContext.PlayerSkin.Skin, playerContext.CoinCollector.CollectedCoins);
+			item.Init(playerContext.PlayerSkin.Skin, playerContext.CoinCollector.CollectedCoins, playerContext.NickName);
 		}
 
 		private void Start()
